@@ -649,7 +649,7 @@ const DEFAULT_PROJECTS: MgnProject[] = [
 ]
 
 const DEFAULTS = {
-  name: "Aurelia Sorel",
+  name: "Sarah Guhaina",
   role: "UX/UI Designer",
   year: "2026",
   location: "Paris",
@@ -668,7 +668,7 @@ const DEFAULTS = {
     { title: "Erasmus — Études visuelles", place: "Université Paris 8", period: "2023", circled: true },
     { title: "B.A. Multimedia Sciences & Technologies", place: "University of Udine", period: "2021 — 26", circled: true },
   ] as MgnEducation[],
-  cvUrl: "https://example.com/aurelia-sorel-cv.pdf",
+  cvUrl: "https://3dportfolioview01.vercel.app/",
   cvNote: "my curriculum vitae",
   languages: [
     { name: "Italian", level: "native", value: 1 },
@@ -708,7 +708,7 @@ const DEFAULTS = {
   ] as MgnFact[],
   factsNote: "the things that never fit on a CV",
   thanks: "Thank you",
-  email: "aurelia.sorel@example.com",
+  email: "",
   links: [
     { label: "Behance", href: "https://www.behance.net" },
     { label: "Dribbble", href: "https://dribbble.com" },
@@ -2033,7 +2033,7 @@ function Thanks({ info, thanks, portrait, name, email, links, letter, signature,
           <Heading text={thanks} seed={16} className="mgn-thanks-title" />
           {email && (
             <div className="mgn-touch">
-              <b>Get in touch:</b>
+              <b>Get in touch with {name}:</b>
               <button className="mgn-email" onClick={copy} aria-label={"Copy " + email}>
                 {email}
                 <PenMark kind="under" seed={81} padX={1} padY={7} />
