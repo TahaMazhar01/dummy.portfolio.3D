@@ -28,6 +28,7 @@
 // doodle, arrow and the QR code are drawn in this file as SVG.
 import * as React from "react"
 import HeroStickerTrail from "../../src/components/HeroStickerTrail"
+import HeroDesignProcess from "../../src/components/HeroDesignProcess"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ScrollToPlugin } from "gsap/ScrollToPlugin"
@@ -773,8 +774,9 @@ const CSS = `
 .mgn-title[data-roll-ready=true] .mgn-reel{animation:mgn-letter-roll 1.8s cubic-bezier(.76,0,.24,1) both;animation-delay:calc(150ms + var(--mgn-i)*100ms)}
 @keyframes mgn-letter-roll{from{transform:translateY(25%)}to{transform:translateY(-75%)}}
 .mgn-sig{position:relative;align-self:center;margin-right:1%;margin-bottom:0;transform:rotate(-7deg);font-size:clamp(30px,4.4cqi,72px);white-space:nowrap;cursor:default;z-index:2}
-.mgn-pill-wrap{position:relative;margin-top:clamp(20px,3cqi,42px);align-self:flex-end;margin-right:6%}
-.mgn-pill{position:relative;display:inline-block;padding:.32em 1.1em .36em;border:1.5px solid currentColor;border-radius:999px;font-size:clamp(12px,1.35cqi,19px);font-weight:400;letter-spacing:.02em;color:var(--fg)}
+.mgn-cover-details{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:clamp(24px,4cqi,56px);width:100%;margin-top:clamp(24px,4cqi,56px)}
+.mgn-pill-wrap{position:relative;justify-self:end;margin:12px 4% 0 0}
+.mgn-pill{position:relative;display:inline-block;white-space:nowrap;padding:.32em 1.1em .36em;border:1.5px solid currentColor;border-radius:999px;font-size:clamp(12px,1.35cqi,19px);font-weight:400;letter-spacing:.02em;color:var(--fg)}
 .mgn-cover-meta{position:absolute;left:clamp(18px,5.2cqi,92px);right:clamp(18px,5.2cqi,92px);bottom:clamp(20px,3cqi,40px);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
 .mgn-hint{display:flex;align-items:center;gap:6px;font-family:var(--mgn-hand);font-size:22px;letter-spacing:0;color:var(--mgn-pen)}
 .mgn-hint svg{width:22px;height:40px;animation:mgn-bob 2.2s ease-in-out infinite}
@@ -787,6 +789,20 @@ const CSS = `
 .mgn-sticker .mgn-draw{animation:mgn-sticker-draw .4s ease-out both}
 @keyframes mgn-sticker-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 @keyframes mgn-sticker-pop{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--angle) - 18deg)) scale(.25)}12%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1.12)}28%,66%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1)}100%{opacity:0;transform:translate(-50%,calc(-50% + 24px)) rotate(calc(var(--angle) + 18deg)) scale(.65)}}
+.mgn-process{width:100%;max-width:520px;margin:0;user-select:none}
+.mgn-process svg{display:block;width:100%;height:auto;stroke-width:1.7}
+.mgn-process text{font:26px var(--mgn-hand);text-anchor:middle;fill:var(--mgn-pen);stroke:none}
+.mgn-process figcaption{margin:4px 0 0 12px;font:400 clamp(11px,1cqi,13px)/1.6 var(--mgn-body);color:var(--muted)}
+.mgn-process-step{animation:mgn-process-focus 9s ease-in-out infinite;animation-delay:calc(var(--step)*3s)}
+.mgn-process-flow{stroke-dasharray:3 7;animation:mgn-process-flow 8s linear infinite}
+.mgn-process-draw{stroke-dasharray:1;animation:mgn-process-draw 9s ease-in-out infinite;animation-delay:calc(var(--step)*3s)}
+.mgn-process-pencil{transform-box:fill-box;transform-origin:center;animation:mgn-process-pencil 3s ease-in-out infinite}
+.mgn-process[data-active=false] *{animation-play-state:paused}
+@keyframes mgn-process-focus{0%,30%,100%{opacity:1}40%,85%{opacity:.75}}
+@keyframes mgn-process-flow{to{stroke-dashoffset:-80}}
+@keyframes mgn-process-draw{0%{stroke-dashoffset:1}20%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:1}}
+@keyframes mgn-process-pencil{0%,100%{transform:translate(0,0) rotate(-3deg)}50%{transform:translate(2px,-3px) rotate(3deg)}}
+@container(max-width:640px){.mgn-cover-details{grid-template-columns:1fr;gap:22px}.mgn-cover-details .mgn-pill-wrap{grid-row:1;margin-top:0}.mgn-process{grid-row:2;justify-self:center;max-width:440px}.mgn-process figcaption{font-size:11px;margin-left:0;text-align:center}}
 /* hello */
 .mgn-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,6cqi,110px);align-items:center;max-width:1500px;margin:0 auto}
 .mgn-traits{position:relative;width:100%;max-width:560px;aspect-ratio:500/520;margin:0 auto}
@@ -968,6 +984,7 @@ const CSS = `
   .mgn-qr-wrap{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
+  .mgn-process *{animation:none!important;opacity:1;stroke-dashoffset:0}
   .mgn-sticker-trail{display:none}
   .mgn-title[data-roll-ready] .mgn-reel{animation:none;transform:translateY(-75%);will-change:auto}
   .mgn-li{transition:none;transform:none}
@@ -1613,11 +1630,14 @@ function Cover({ info, title, name, portrait, role, year, location, docLabel, in
           ))}
         </h1>
         </HeroStickerTrail>
+        <div className="mgn-cover-details">
+          <HeroDesignProcess />
         <div className="mgn-pill-wrap">
           <span className="mgn-pill">
             {role}
             <PenMark kind="oval" seed={9} padX={12} padY={9} />
           </span>
+        </div>
         </div>
       </div>
       <div className="mgn-cover-meta">
@@ -2286,7 +2306,7 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
             rotation: tilt,
           }, 0)
         })
-        out.to(cover.querySelectorAll(".mgn-pill-wrap, .mgn-cover-identity"), { y: -70, autoAlpha: 0 }, 0)
+        out.to(cover.querySelectorAll(".mgn-cover-details, .mgn-cover-identity"), { y: -70, autoAlpha: 0 }, 0)
         out.fromTo(cover.querySelectorAll(".mgn-cover-in"), { y: 0, scale: 1 }, {
           y: () => cover.clientHeight * 0.5,
           scale: 0.94,
