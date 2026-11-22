@@ -2261,19 +2261,37 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
         play(intro, cover.querySelectorAll(".mgn-pill"), { scale: 0.5, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.9, ease: "back.out(2.2)" }, 0.75)
         play(intro, cover.querySelectorAll(".mgn-cover-meta > *"), { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 1.1)
 
-        // …and drift apart as you leave
+        // Keep the title visible long enough for its original letter drift to read.
+        // Rolling, pointer stretch, and scroll movement each use separate elements.
         const letters = cover.querySelectorAll(".mgn-l")
         const n = letters.length
-        const out = gsap.timeline({ scrollTrigger: { trigger: cover, start: "top top", end: "bottom top", scrub: 0.6 } })
-        letters.forEach((l, i) => {
-          const R = rand(i + 3)
-          out.to(l, { x: (i - (n - 1) / 2) * 26, y: -70 - R() * 170, rotation: (R() - 0.5) * 36, ease: "none" }, 0)
+        const movementScale = () => clamp(cover.clientWidth / 1100, 0.45, 1)
+        const out = gsap.timeline({
+          defaults: { duration: 1, ease: "none" },
+          scrollTrigger: {
+            trigger: cover,
+            start: "top top",
+            end: "70% top",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
         })
-        out.to(cover.querySelectorAll(".mgn-pill-wrap, .mgn-sig"), { y: -110, autoAlpha: 0, ease: "none" }, 0)
-        out.to(cover.querySelectorAll(".mgn-cover-in"), { scale: 0.9, ease: "none" }, 0)
-
+        letters.forEach((letter, i) => {
+          const R = rand(i + 3)
+          const rise = -70 - R() * 170
+          const tilt = (R() - 0.5) * 36
+          out.fromTo(letter, { x: 0, y: 0, rotation: 0 }, {
+            x: () => (i - (n - 1) / 2) * 26 * movementScale(),
+            y: () => rise * movementScale(),
+            rotation: tilt,
+          }, 0)
+        })
+        out.to(cover.querySelectorAll(".mgn-pill-wrap, .mgn-cover-identity"), { y: -70, autoAlpha: 0 }, 0)
+        out.fromTo(cover.querySelectorAll(".mgn-cover-in"), { y: 0, scale: 1 }, {
+          y: () => cover.clientHeight * 0.5,
+          scale: 0.94,
+        }, 0)
       }
-
       // headings: characters rise, the underline goes from nervous to sure
       q(".mgn-hd").forEach((hd) => {
         play(
