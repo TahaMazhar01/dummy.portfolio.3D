@@ -38,4 +38,4 @@ Based on Marginalia Portfolio Template by Kedhareswer Naidu, distributed under t
 
 The UK education entries and language proficiency levels are sample content. A standalone QR code is available at public/portfolio-qr.svg.
 
-The home page includes a themed Design Studio section with rolling letters, pointer interactions, and sticker bursts. Its source and styles are in src/components/StudioMotionHero.tsx and StudioMotionHero.module.css. Social profile links are hidden until Sarah's actual profile URLs are supplied.
+The home page combines rolling Portfolio title letters with the smooth orbit animation. Social profile links remain hidden until Sarah's actual profile URLs are supplied.

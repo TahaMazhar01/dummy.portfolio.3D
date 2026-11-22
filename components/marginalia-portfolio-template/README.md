@@ -18,7 +18,7 @@ arrow, the book stack and the QR code are drawn in this file.
 
 ## The sheets
 
-- **Cover.** The title's letters rise on load. Then the signature writes itself
+- **Cover.** The title's letters roll into view with a staggered reel animation. Then the signature writes itself
   in, the curly arrow and the oval around your role draw in, and a star starts
   orbiting one letter (it dims when it passes behind). Hover the signature and
   the star morphs into a heart. Moving the pointer over the cover leaves a

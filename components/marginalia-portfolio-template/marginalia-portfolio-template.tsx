@@ -72,7 +72,7 @@ export type MgnEducation = { title: string; place?: string; period?: string; cir
 export type MgnLanguage = { name: string; level: string; value: number }
 export type MgnFact = { doodle: MgnDoodle; text: string }
 export type MgnLink = { label: string; href: string }
-export type MgnSection = "cover" | "studio" | "hello" | "education" | "skills" | "projects" | "cases" | "facts" | "thanks"
+export type MgnSection = "cover" | "hello" | "education" | "skills" | "projects" | "cases" | "facts" | "thanks"
 
 export type MarginaliaPortfolioTemplateProps = {
   name?: string
@@ -115,7 +115,6 @@ export type MarginaliaPortfolioTemplateProps = {
   signature?: string
   /** Which sheets to show, in order. */
   sections?: MgnSection[]
-  studio?: React.ReactNode
   colors?: { paper?: string; night?: string; ink?: string; pen?: string; penNight?: string }
   /** href: a stylesheet for the faces below (null loads nothing). */
   fonts?: { href?: string | null; display?: string; hand?: string; body?: string }
@@ -722,7 +721,6 @@ const DEFAULTS = {
 
 const SECTION_LABEL: { [k: string]: string } = {
   cover: "cover",
-  studio: "design studio",
   hello: "hello",
   education: "education",
   skills: "skills",
@@ -753,7 +751,6 @@ const CSS = `
 .mgn-sheet[data-tone=paper]{--fg:var(--mgn-ink);--muted:color-mix(in oklab,var(--mgn-ink) 60%,var(--mgn-paper));--rule:color-mix(in oklab,var(--mgn-ink) 16%,var(--mgn-paper));background:var(--mgn-paper)}
 .mgn-sheet[data-tone=night]{--mgn-pen:var(--mgn-pen-night);--fg:#ecebe7;--muted:color-mix(in oklab,#ecebe7 62%,var(--mgn-night));--rule:color-mix(in oklab,#ecebe7 16%,var(--mgn-night));isolation:isolate}
 .mgn-sheet>*{width:100%}
-.mgn-studio-sheet{padding:0}
 .mgn-sheet-bg{position:absolute;inset:0;z-index:-1;background:var(--mgn-night);pointer-events:none}
 .mgn-grain{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.5;mix-blend-mode:multiply;background-image:radial-gradient(color-mix(in oklab,var(--mgn-ink) 9%,transparent) .6px,transparent .7px);background-size:5px 5px}
 .mgn-sheet[data-tone=night] .mgn-grain{mix-blend-mode:screen;background-image:radial-gradient(rgba(255,255,255,.05) .6px,transparent .7px)}
@@ -802,7 +799,12 @@ const CSS = `
 .mgn-title{display:flex;white-space:nowrap;font-size:clamp(78px,21.5cqi,370px);color:var(--fg);margin:0;position:relative;z-index:1}
 .mgn-l{position:relative;display:inline-block;will-change:transform}
 .mgn-lc{display:inline-block;overflow:hidden;padding:.08em .015em .16em;margin:-.08em -.015em -.16em}
-.mgn-li{display:inline-block}
+.mgn-li{display:inline-block;height:1em;vertical-align:top;transform:skewX(var(--mgn-lean,0deg)) scaleX(var(--mgn-stretch,1));transform-origin:50% 65%;transition:transform .5s cubic-bezier(.16,1,.3,1)}
+.mgn-reel{display:block;height:4em;transform:translateY(-75%);will-change:transform}
+.mgn-reel>span{display:block;height:1em;line-height:1}
+.mgn-title[data-roll-ready=false] .mgn-reel{transform:translateY(25%)}
+.mgn-title[data-roll-ready=true] .mgn-reel{animation:mgn-letter-roll 1.8s cubic-bezier(.76,0,.24,1) both;animation-delay:calc(150ms + var(--mgn-i)*100ms)}
+@keyframes mgn-letter-roll{from{transform:translateY(25%)}to{transform:translateY(-75%)}}
 .mgn-orbit{position:absolute;inset:0;pointer-events:none}
 .mgn-orbit svg{position:absolute;overflow:visible;left:0;top:0;width:100%;height:100%;stroke-width:2.2}
 .mgn-orbit-front{z-index:2}
@@ -1000,6 +1002,8 @@ const CSS = `
   .mgn-qr-wrap{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
+  .mgn-title[data-roll-ready] .mgn-reel{animation:none;transform:translateY(-75%);will-change:auto}
+  .mgn-li{transition:none;transform:none}
   .mgn-deal{height:auto}
   .mgn-deal-stage{position:relative;height:auto;min-height:var(--mgn-h)}
   .mgn-hint svg,.mgn-fact:hover svg,.mgn-note-swap{animation:none}
@@ -1514,6 +1518,7 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
   info: SheetInfo; title: string; name: string; role: string; year: string; location: string; docLabel: string; inkTrail: boolean
 }) {
   const chars = Array.from(title)
+  const [rollReady, setRollReady] = React.useState(false)
   const titleRef = React.useRef<HTMLHeadingElement>(null)
   const [titleSize, setTitleSize] = React.useState({ width: 1000, height: 240 })
   const rx = titleSize.width * 0.52
@@ -1532,6 +1537,34 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
     observer.observe(heading)
     return () => observer.disconnect()
   }, [title])
+  React.useEffect(() => {
+    const cover = titleRef.current?.closest(".mgn-cover")
+    if (!cover) return
+    const observer = new IntersectionObserver(([entry]) => {
+      setRollReady(entry.isIntersecting)
+    }, { threshold: 0.2 })
+    observer.observe(cover)
+    return () => observer.disconnect()
+  }, [])
+
+  const moveLetters = (event: React.PointerEvent<HTMLHeadingElement>) => {
+    if (event.pointerType === "touch" || reducedMotion()) return
+    const box = event.currentTarget.getBoundingClientRect()
+    const x = (event.clientX - box.left) / box.width
+    const y = (event.clientY - box.top) / box.height
+    event.currentTarget.querySelectorAll<HTMLElement>(".mgn-li").forEach((letter, i) => {
+      const distance = Math.abs(x - (i + 0.5) / chars.length)
+      letter.style.setProperty("--mgn-stretch", String(0.96 + Math.max(0, 1 - distance * 4) * 0.1))
+      letter.style.setProperty("--mgn-lean", `${(y - 0.5) * -8}deg`)
+    })
+  }
+  const resetLetters = () => {
+    titleRef.current?.querySelectorAll<HTMLElement>(".mgn-li").forEach(letter => {
+      letter.style.removeProperty("--mgn-stretch")
+      letter.style.removeProperty("--mgn-lean")
+    })
+  }
+
   const starRef = React.useRef(null as SVGPathElement | null)
   const canvasRef = React.useRef(null as HTMLCanvasElement | null)
   const sampleOrbit = React.useMemo(() => makeOrbitSampler(rx, ry, ORBIT_TILT), [rx, ry])
@@ -1608,7 +1641,7 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
             </svg>
             <span className="mgn-write">{name}</span>
           </span>
-        <h1 ref={titleRef} className="mgn-display mgn-title" aria-label={title + " — " + name + ", " + role}>
+        <h1 ref={titleRef} data-roll-ready={rollReady} onPointerMove={moveLetters} onPointerLeave={resetLetters} className="mgn-display mgn-title" aria-label={title + " — " + name + ", " + role}>
           <span className="mgn-orbit" aria-hidden="true">
             <svg className="mgn-orbit-back mgn-ink" viewBox={[-titleSize.width / 2, -titleSize.height / 2, titleSize.width, titleSize.height].join(" ")}>
               <g transform="rotate(-8)">
@@ -1627,9 +1660,13 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
             </svg>
           </span>
           {chars.map((c, i) => (
-            <span key={i} className="mgn-l" aria-hidden="true">
+            <span key={i} className="mgn-l" aria-hidden="true" style={{ "--mgn-i": i } as React.CSSProperties}>
               <span className="mgn-lc">
-                <span className="mgn-li">{c === " " ? " " : c}</span>
+                <span className="mgn-li">
+                  <span className="mgn-reel">
+                    {[0, 1, 2, 3].map(copy => <span key={copy}>{c === " " ? " " : c}</span>)}
+                  </span>
+                </span>
               </span>
             </span>
           ))}
@@ -2273,11 +2310,10 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
       })
       if (!motion) return
 
-      // the cover: letters rise, the name writes itself, the pen marks follow
+      // The cover letters roll independently; the name and pen marks follow.
       const cover = root.querySelector(".mgn-cover")
       if (cover) {
         const intro = gsap.timeline({ delay: 0.15 })
-        play(intro, cover.querySelectorAll(".mgn-li"), { yPercent: 118, rotate: 8 }, { yPercent: 0, rotate: 0, duration: 1.2, ease: "expo.out", stagger: 0.055 }, 0)
         play(intro, cover.querySelectorAll(".mgn-write"), { clipPath: W0 }, { clipPath: W1, duration: 1.2, ease: "power1.inOut" }, 0.6)
         play(intro, cover.querySelectorAll(".mgn-draw"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut", stagger: 0.12 }, 1)
         play(intro, cover.querySelectorAll(".mgn-pill"), { scale: 0.5, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.9, ease: "back.out(2.2)" }, 0.75)
@@ -2473,8 +2509,6 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
         switch (kind) {
           case "cover":
             return <Cover key={info.id} info={info} title={title} name={name} role={role} year={year} location={location} docLabel={docLabel} inkTrail={inkTrail} />
-          case "studio":
-            return <Sheet key={info.id} info={info} className="mgn-studio-sheet">{props.studio}</Sheet>
           case "hello":
             return <Hello key={info.id} info={info} portrait={portrait} traits={traits} greeting={greeting} bio={bio} name={name} />
           case "education":
