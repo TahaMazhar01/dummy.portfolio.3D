@@ -782,8 +782,10 @@ const CSS = `
 
 .mgn-title-stage{position:relative;isolation:isolate;width:max-content;max-width:100%;touch-action:pan-y;user-select:none}
 .mgn-sticker-trail{position:absolute;inset:-28px 0;pointer-events:none;z-index:4;overflow:visible}
-.mgn-sticker{position:absolute;width:clamp(56px,7cqi,100px);aspect-ratio:1;filter:drop-shadow(2px 4px 0 color-mix(in oklab,var(--mgn-ink) 65%,transparent));animation:mgn-sticker-pop 1.5s cubic-bezier(.2,.8,.2,1) forwards;will-change:transform,opacity}
+.mgn-sticker{position:absolute;width:clamp(56px,7cqi,100px);aspect-ratio:1;animation:mgn-sticker-pop 1.5s cubic-bezier(.2,.8,.2,1) forwards;will-change:transform,opacity}
 .mgn-sticker svg{width:100%;height:100%;display:block}
+.mgn-sticker .mgn-draw{animation:mgn-sticker-draw .4s ease-out both}
+@keyframes mgn-sticker-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 @keyframes mgn-sticker-pop{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--angle) - 18deg)) scale(.25)}12%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1.12)}28%,66%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1)}100%{opacity:0;transform:translate(-50%,calc(-50% + 24px)) rotate(calc(var(--angle) + 18deg)) scale(.65)}}
 /* hello */
 .mgn-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,6cqi,110px);align-items:center;max-width:1500px;margin:0 auto}
@@ -1583,7 +1585,7 @@ function Cover({ info, title, name, portrait, role, year, location, docLabel, in
             <span className="mgn-write">{name}</span>
           </span>
         </div>
-        <HeroStickerTrail>
+        <HeroStickerTrail renderIcon={kind => <Doodle kind={(["guitar", "dumbbell", "plane", "coffee", "cat", "music", "pencil"] as MgnDoodle[])[kind]} />}>
         <h1 ref={titleRef} data-roll-ready={rollReady} onPointerMove={moveLetters} onPointerLeave={resetLetters} className="mgn-display mgn-title" aria-label={title + " — " + name + ", " + role}>
           {chars.map((c, i) => (
             <span key={i} className="mgn-l" aria-hidden="true" style={{ "--mgn-i": i } as React.CSSProperties}>
