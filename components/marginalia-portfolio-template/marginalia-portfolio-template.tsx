@@ -760,7 +760,8 @@ const CSS = `
 .mgn-cover{display:flex;justify-content:flex-start;align-items:center;overflow:hidden;padding-top:clamp(88px,12svh,140px);padding-bottom:120px;touch-action:pan-y}
 .mgn-canvas{position:absolute;inset:0;width:100%;height:100%;max-width:none;pointer-events:none;z-index:3}
 .mgn-cover-in{position:relative;display:flex;flex-direction:column;align-items:center;margin-block:0}
-.mgn-cover-identity{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;margin-bottom:clamp(28px,5cqi,72px)}
+.mgn-cover-identity{display:flex;align-items:center;justify-content:space-between;gap:clamp(10px,2cqi,24px);width:100%;margin-bottom:clamp(28px,5cqi,72px)}
+.mgn-profile-arrow{position:relative;flex:1;min-width:32px;height:72px;stroke-width:2.1;pointer-events:none}
 .mgn-cover .mgn-cover-avatar{width:clamp(76px,10cqi,136px);flex-shrink:0}
 .mgn-title{display:flex;white-space:nowrap;font-size:clamp(78px,21.5cqi,370px);color:var(--fg);margin:0;position:relative;z-index:1}
 .mgn-l{position:relative;display:inline-block;will-change:transform}
@@ -772,7 +773,6 @@ const CSS = `
 .mgn-title[data-roll-ready=true] .mgn-reel{animation:mgn-letter-roll 1.8s cubic-bezier(.76,0,.24,1) both;animation-delay:calc(150ms + var(--mgn-i)*100ms)}
 @keyframes mgn-letter-roll{from{transform:translateY(25%)}to{transform:translateY(-75%)}}
 .mgn-sig{position:relative;align-self:center;margin-right:1%;margin-bottom:0;transform:rotate(-7deg);font-size:clamp(30px,4.4cqi,72px);white-space:nowrap;cursor:default;z-index:2}
-.mgn-sig-arrow{position:absolute;right:calc(100% - .55em);top:.5em;width:1.6em;height:auto;aspect-ratio:150/110;stroke-width:2.1}
 .mgn-pill-wrap{position:relative;margin-top:clamp(20px,3cqi,42px);align-self:flex-end;margin-right:6%}
 .mgn-pill{position:relative;display:inline-block;padding:.32em 1.1em .36em;border:1.5px solid currentColor;border-radius:999px;font-size:clamp(12px,1.35cqi,19px);font-weight:400;letter-spacing:.02em;color:var(--fg)}
 .mgn-cover-meta{position:absolute;left:clamp(18px,5.2cqi,92px);right:clamp(18px,5.2cqi,92px);bottom:clamp(20px,3cqi,40px);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
@@ -1480,6 +1480,22 @@ function Sheet({ info, className, flip, children }: { info: SheetInfo; className
 }
 
 
+function PortraitArrow() {
+  const ref = React.useRef<SVGSVGElement>(null)
+  const [width, setWidth] = React.useState(200)
+  React.useLayoutEffect(() => {
+    const svg = ref.current
+    if (!svg) return
+    const measure = () => setWidth(Math.max(32, svg.clientWidth))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(svg)
+    return () => observer.disconnect()
+  }, [])
+  return <svg ref={ref} className="mgn-profile-arrow mgn-ink" viewBox={`0 0 ${width} 72`} aria-hidden="true">
+    <Arrow a={[width - 5, 30]} b={[8, 40]} bend={Math.min(0.2, 24 / width)} head={10} />
+  </svg>
+}
 function Cover({ info, title, name, portrait, role, year, location, docLabel, inkTrail }: {
   info: SheetInfo; title: string; name: string; portrait: string; role: string; year: string; location: string; docLabel: string; inkTrail: boolean
 }) {
@@ -1577,11 +1593,8 @@ function Cover({ info, title, name, portrait, role, year, location, docLabel, in
       <div className="mgn-cover-in">
         <div className="mgn-cover-identity">
           {portrait && <div className="mgn-avatar mgn-cover-avatar"><img src={photo(portrait, 320)} alt={name} /><PenMark kind="oval" seed={80} padX={9} padY={9} /></div>}
+          {portrait && <PortraitArrow />}
         <span className="mgn-sig mgn-hand">
-            <svg className="mgn-sig-arrow mgn-ink" viewBox="0 0 150 110" aria-hidden="true">
-              <path className="mgn-draw" pathLength={1} d="M146 14C128 34 104 30 101 17C98 4 120 2 117 24C114 48 70 74 24 96" />
-              <path className="mgn-draw" pathLength={1} d="M30 80L22 97L41 99" />
-            </svg>
             <span className="mgn-write">{name}</span>
           </span>
         </div>
