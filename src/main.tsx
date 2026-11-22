@@ -2,6 +2,7 @@ import * as React from "react"
 import { createRoot } from "react-dom/client"
 import MarginaliaPortfolioTemplate from "../components/marginalia-portfolio-template/marginalia-portfolio-template"
 import "./style.css"
+import StudioMotionHero from "./components/StudioMotionHero"
 
 // Adjust the page backgrounds and pencil colours here.
 const portfolioColors = {
@@ -15,6 +16,9 @@ const portfolioColors = {
 createRoot(document.getElementById("root")!).render(
   <MarginaliaPortfolioTemplate
     name="Sarah Guhaina"
+    links={[]}
+    studio={<StudioMotionHero />}
+    sections={["cover", "studio", "hello", "education", "skills", "projects", "cases", "facts", "thanks"]}
     docLabel="Portfolio"
     portrait="/sarah-guhaina-portrait.png"
     cvUrl="https://3dportfolioview01.vercel.app/"

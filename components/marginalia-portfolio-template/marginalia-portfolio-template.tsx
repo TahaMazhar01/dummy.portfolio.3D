@@ -72,7 +72,7 @@ export type MgnEducation = { title: string; place?: string; period?: string; cir
 export type MgnLanguage = { name: string; level: string; value: number }
 export type MgnFact = { doodle: MgnDoodle; text: string }
 export type MgnLink = { label: string; href: string }
-export type MgnSection = "cover" | "hello" | "education" | "skills" | "projects" | "cases" | "facts" | "thanks"
+export type MgnSection = "cover" | "studio" | "hello" | "education" | "skills" | "projects" | "cases" | "facts" | "thanks"
 
 export type MarginaliaPortfolioTemplateProps = {
   name?: string
@@ -115,6 +115,7 @@ export type MarginaliaPortfolioTemplateProps = {
   signature?: string
   /** Which sheets to show, in order. */
   sections?: MgnSection[]
+  studio?: React.ReactNode
   colors?: { paper?: string; night?: string; ink?: string; pen?: string; penNight?: string }
   /** href: a stylesheet for the faces below (null loads nothing). */
   fonts?: { href?: string | null; display?: string; hand?: string; body?: string }
@@ -721,6 +722,7 @@ const DEFAULTS = {
 
 const SECTION_LABEL: { [k: string]: string } = {
   cover: "cover",
+  studio: "design studio",
   hello: "hello",
   education: "education",
   skills: "skills",
@@ -751,6 +753,7 @@ const CSS = `
 .mgn-sheet[data-tone=paper]{--fg:var(--mgn-ink);--muted:color-mix(in oklab,var(--mgn-ink) 60%,var(--mgn-paper));--rule:color-mix(in oklab,var(--mgn-ink) 16%,var(--mgn-paper));background:var(--mgn-paper)}
 .mgn-sheet[data-tone=night]{--mgn-pen:var(--mgn-pen-night);--fg:#ecebe7;--muted:color-mix(in oklab,#ecebe7 62%,var(--mgn-night));--rule:color-mix(in oklab,#ecebe7 16%,var(--mgn-night));isolation:isolate}
 .mgn-sheet>*{width:100%}
+.mgn-studio-sheet{padding:0}
 .mgn-sheet-bg{position:absolute;inset:0;z-index:-1;background:var(--mgn-night);pointer-events:none}
 .mgn-grain{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.5;mix-blend-mode:multiply;background-image:radial-gradient(color-mix(in oklab,var(--mgn-ink) 9%,transparent) .6px,transparent .7px);background-size:5px 5px}
 .mgn-sheet[data-tone=night] .mgn-grain{mix-blend-mode:screen;background-image:radial-gradient(rgba(255,255,255,.05) .6px,transparent .7px)}
@@ -1492,6 +1495,7 @@ function Sheet({ info, className, flip, children }: { info: SheetInfo; className
     <section
       className={"mgn-sheet" + (className ? " " + className : "")}
       data-tone={info.tone}
+      id={info.id}
       data-sheet={info.id}
       data-sec=""
       data-label={info.label}
@@ -2469,6 +2473,8 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
         switch (kind) {
           case "cover":
             return <Cover key={info.id} info={info} title={title} name={name} role={role} year={year} location={location} docLabel={docLabel} inkTrail={inkTrail} />
+          case "studio":
+            return <Sheet key={info.id} info={info} className="mgn-studio-sheet">{props.studio}</Sheet>
           case "hello":
             return <Hello key={info.id} info={info} portrait={portrait} traits={traits} greeting={greeting} bio={bio} name={name} />
           case "education":
