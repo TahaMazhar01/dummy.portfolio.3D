@@ -19,9 +19,7 @@ arrow, the book stack and the QR code are drawn in this file.
 ## The sheets
 
 - **Cover.** The title's letters roll into view with a staggered reel animation. Then the signature writes itself
-  in, the curly arrow and the oval around your role draw in, and a star starts
-  orbiting one letter (it dims when it passes behind). Hover the signature and
-  the star morphs into a heart. Moving the pointer over the cover leaves a
+  in, the curly arrow and the oval around your role draw in, and hovering or tapping the title reveals animated stickers. Moving the pointer over the cover leaves a
   fading ink trail. As you scroll away, the letters drift apart.
 - **Hello.** A greyscale portrait (it turns colour on hover) inside two sketchy
   boxes, with up to six trait words pointing at it. The traits and the photo
@@ -103,7 +101,7 @@ See `demo-terracotta.tsx` for a complete second persona.
 | Prop | Default | Notes |
 |---|---|---|
 | `name`, `role`, `year`, `location` | Aurelia Sorel, UX/UI Designer, 2026, Paris | |
-| `title` | `"Portfolio"` | The giant cover word. The star orbits its last "o", or its last letter if there's no "o". |
+| `title` | `"Portfolio"` | The giant cover word. Each letter rolls into place; pointer and touch interactions reveal stickers. |
 | `docLabel` | `"Curriculum Vitae"` | Middle of the top bar; opens the contents page. |
 | `portrait` | Unsplash photo | Used on Hello and Thank you. |
 | `traits` | six words | Up to six handwritten words around the portrait. |

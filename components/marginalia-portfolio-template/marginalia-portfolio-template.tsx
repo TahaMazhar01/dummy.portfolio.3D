@@ -27,6 +27,7 @@
 // Phone screens are built here in markup around Unsplash photos; every
 // doodle, arrow and the QR code are drawn in this file as SVG.
 import * as React from "react"
+import HeroStickerTrail from "../../src/components/HeroStickerTrail"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ScrollToPlugin } from "gsap/ScrollToPlugin"
@@ -297,43 +298,6 @@ function formatCount(v: number, decimals: number): string {
 function pileOffset(i: number, n: number): { x: number; y: number; r: number } {
   const R = rand(i + 7)
   return { x: (R() - 0.5) * 40, y: (R() - 0.5) * 30 - (n - i) * 2, r: (R() - 0.5) * 28 }
-}
-
-/** Where the orbiting star is at phase t (0..1) on a tilted ellipse; front = in front of the letter. */
-function orbitPoint(t: number, rx: number, ry: number, tilt: number): { x: number; y: number; front: boolean } {
-  const a = t * Math.PI * 2
-  const x0 = Math.cos(a) * rx
-  const y0 = Math.sin(a) * ry
-  const c = Math.cos(tilt)
-  const s = Math.sin(tilt)
-  return { x: x0 * c - y0 * s, y: x0 * s + y0 * c, front: Math.sin(a) > 0 }
-}
-
-/** Sample the ellipse by distance so the star keeps a steady speed through its turns. */
-function makeOrbitSampler(rx: number, ry: number, tilt: number) {
-  const steps = 512
-  const lengths = [0]
-  let previous = orbitPoint(0, rx, ry, tilt)
-  for (let i = 1; i <= steps; i++) {
-    const point = orbitPoint(i / steps, rx, ry, tilt)
-    lengths.push(lengths[i - 1] + Math.hypot(point.x - previous.x, point.y - previous.y))
-    previous = point
-  }
-  return (progress: number) => {
-    const distance = (((progress % 1) + 1) % 1) * lengths[steps]
-    let low = 0
-    let high = steps
-    while (high - low > 1) {
-      const mid = (low + high) >> 1
-      if (lengths[mid] < distance) low = mid
-      else high = mid
-    }
-    const blend = (distance - lengths[low]) / (lengths[high] - lengths[low] || 1)
-    const phase = (low + blend) / steps
-    const point = orbitPoint(phase, rx, ry, tilt)
-    const depth = Math.sin(phase * Math.PI * 2)
-    return { ...point, opacity: 0.35 + 0.65 * (0.5 + 0.5 * Math.tanh(depth * 3)) }
-  }
 }
 
 /** A slightly wobbly horizontal pen line from x1 to x2. */
@@ -793,9 +757,11 @@ const CSS = `
 .mgn-index-foot{margin-top:clamp(24px,4cqi,56px);font-size:12px;letter-spacing:.06em;color:color-mix(in oklab,var(--mgn-ink) 60%,var(--mgn-paper))}
 
 /* cover */
-.mgn-cover{display:grid;place-items:center;overflow:hidden;padding-top:60px;touch-action:pan-y}
+.mgn-cover{display:flex;justify-content:flex-start;align-items:center;overflow:hidden;padding-top:clamp(88px,12svh,140px);padding-bottom:120px;touch-action:pan-y}
 .mgn-canvas{position:absolute;inset:0;width:100%;height:100%;max-width:none;pointer-events:none;z-index:3}
-.mgn-cover-in{position:relative;display:flex;flex-direction:column;align-items:center}
+.mgn-cover-in{position:relative;display:flex;flex-direction:column;align-items:center;margin-block:0}
+.mgn-cover-identity{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;margin-bottom:clamp(28px,5cqi,72px)}
+.mgn-cover .mgn-cover-avatar{width:clamp(76px,10cqi,136px);flex-shrink:0}
 .mgn-title{display:flex;white-space:nowrap;font-size:clamp(78px,21.5cqi,370px);color:var(--fg);margin:0;position:relative;z-index:1}
 .mgn-l{position:relative;display:inline-block;will-change:transform}
 .mgn-lc{display:inline-block;overflow:hidden;padding:.08em .015em .16em;margin:-.08em -.015em -.16em}
@@ -805,22 +771,20 @@ const CSS = `
 .mgn-title[data-roll-ready=false] .mgn-reel{transform:translateY(25%)}
 .mgn-title[data-roll-ready=true] .mgn-reel{animation:mgn-letter-roll 1.8s cubic-bezier(.76,0,.24,1) both;animation-delay:calc(150ms + var(--mgn-i)*100ms)}
 @keyframes mgn-letter-roll{from{transform:translateY(25%)}to{transform:translateY(-75%)}}
-.mgn-orbit{position:absolute;inset:0;pointer-events:none}
-.mgn-orbit svg{position:absolute;overflow:visible;left:0;top:0;width:100%;height:100%;stroke-width:2.2}
-.mgn-orbit-front{z-index:2}
-.mgn-orbit-back{z-index:-1}
-.mgn-star{position:absolute;left:0;top:0;width:0;height:0;z-index:2}
-.mgn-star svg{position:absolute;left:-14px;top:-14px;width:28px;height:28px;overflow:visible}
-.mgn-star path{fill:var(--mgn-pen);stroke:none}
-.mgn-sig{position:relative;align-self:flex-end;margin-right:1%;margin-bottom:var(--mgn-orbit-gap);transform:rotate(-7deg);font-size:clamp(30px,4.4cqi,72px);white-space:nowrap;cursor:default;z-index:2}
-.mgn-sig-arrow{position:absolute;right:calc(100% - .55em);top:.5em;width:2.3em;height:auto;aspect-ratio:150/110;stroke-width:2.1}
-.mgn-pill-wrap{position:relative;margin-top:var(--mgn-orbit-gap);align-self:flex-end;margin-right:6%}
+.mgn-sig{position:relative;align-self:center;margin-right:1%;margin-bottom:0;transform:rotate(-7deg);font-size:clamp(30px,4.4cqi,72px);white-space:nowrap;cursor:default;z-index:2}
+.mgn-sig-arrow{position:absolute;right:calc(100% - .55em);top:.5em;width:1.6em;height:auto;aspect-ratio:150/110;stroke-width:2.1}
+.mgn-pill-wrap{position:relative;margin-top:clamp(20px,3cqi,42px);align-self:flex-end;margin-right:6%}
 .mgn-pill{position:relative;display:inline-block;padding:.32em 1.1em .36em;border:1.5px solid currentColor;border-radius:999px;font-size:clamp(12px,1.35cqi,19px);font-weight:400;letter-spacing:.02em;color:var(--fg)}
 .mgn-cover-meta{position:absolute;left:clamp(18px,5.2cqi,92px);right:clamp(18px,5.2cqi,92px);bottom:clamp(20px,3cqi,40px);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
 .mgn-hint{display:flex;align-items:center;gap:6px;font-family:var(--mgn-hand);font-size:22px;letter-spacing:0;color:var(--mgn-pen)}
 .mgn-hint svg{width:22px;height:40px;animation:mgn-bob 2.2s ease-in-out infinite}
 @keyframes mgn-bob{0%,100%{transform:translateY(-3px)}50%{transform:translateY(5px)}}
 
+.mgn-title-stage{position:relative;isolation:isolate;width:max-content;max-width:100%;touch-action:pan-y;user-select:none}
+.mgn-sticker-trail{position:absolute;inset:-28px 0;pointer-events:none;z-index:4;overflow:visible}
+.mgn-sticker{position:absolute;width:clamp(56px,7cqi,100px);aspect-ratio:1;filter:drop-shadow(2px 4px 0 color-mix(in oklab,var(--mgn-ink) 65%,transparent));animation:mgn-sticker-pop 1.5s cubic-bezier(.2,.8,.2,1) forwards;will-change:transform,opacity}
+.mgn-sticker svg{width:100%;height:100%;display:block}
+@keyframes mgn-sticker-pop{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--angle) - 18deg)) scale(.25)}12%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1.12)}28%,66%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(1)}100%{opacity:0;transform:translate(-50%,calc(-50% + 24px)) rotate(calc(var(--angle) + 18deg)) scale(.65)}}
 /* hello */
 .mgn-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,6cqi,110px);align-items:center;max-width:1500px;margin:0 auto}
 .mgn-traits{position:relative;width:100%;max-width:560px;aspect-ratio:500/520;margin:0 auto}
@@ -1002,6 +966,7 @@ const CSS = `
   .mgn-qr-wrap{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
+  .mgn-sticker-trail{display:none}
   .mgn-title[data-roll-ready] .mgn-reel{animation:none;transform:translateY(-75%);will-change:auto}
   .mgn-li{transition:none;transform:none}
   .mgn-deal{height:auto}
@@ -1512,31 +1477,13 @@ function Sheet({ info, className, flip, children }: { info: SheetInfo; className
   )
 }
 
-const ORBIT_TILT = (-8 * Math.PI) / 180
 
-function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: {
-  info: SheetInfo; title: string; name: string; role: string; year: string; location: string; docLabel: string; inkTrail: boolean
+function Cover({ info, title, name, portrait, role, year, location, docLabel, inkTrail }: {
+  info: SheetInfo; title: string; name: string; portrait: string; role: string; year: string; location: string; docLabel: string; inkTrail: boolean
 }) {
   const chars = Array.from(title)
   const [rollReady, setRollReady] = React.useState(false)
   const titleRef = React.useRef<HTMLHeadingElement>(null)
-  const [titleSize, setTitleSize] = React.useState({ width: 1000, height: 240 })
-  const rx = titleSize.width * 0.52
-  const ry = titleSize.height * 0.68
-  const starSize = clamp(titleSize.height * 0.075, 9, 22)
-  const orbitGap = Math.ceil(Math.hypot(rx * Math.sin(ORBIT_TILT), ry * Math.cos(ORBIT_TILT)) - titleSize.height / 2 + starSize + 24)
-  const sparkle = React.useMemo(() => sparklePath(0, 0, starSize), [starSize])
-  const heart = React.useMemo(() => heartPath(0, 0, starSize), [starSize])
-
-  React.useLayoutEffect(() => {
-    const heading = titleRef.current
-    if (!heading) return
-    const measure = () => setTitleSize({ width: heading.offsetWidth, height: heading.offsetHeight })
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(heading)
-    return () => observer.disconnect()
-  }, [title])
   React.useEffect(() => {
     const cover = titleRef.current?.closest(".mgn-cover")
     if (!cover) return
@@ -1565,15 +1512,7 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
     })
   }
 
-  const starRef = React.useRef(null as SVGPathElement | null)
   const canvasRef = React.useRef(null as HTMLCanvasElement | null)
-  const sampleOrbit = React.useMemo(() => makeOrbitSampler(rx, ry, ORBIT_TILT), [rx, ry])
-  const start = sampleOrbit(0.15)
-
-  const morphStar = (toHeart: boolean) => {
-    if (!starRef.current) return
-    gsap.to(starRef.current, { morphSVG: toHeart ? heart : sparkle, duration: reducedMotion() ? 0 : 0.6, ease: "back.out(2)", overwrite: "auto" })
-  }
 
   React.useEffect(() => {
     const cv = canvasRef.current
@@ -1633,32 +1572,19 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
   return (
     <Sheet info={info} className="mgn-cover">
       <canvas ref={canvasRef} className="mgn-canvas" aria-hidden="true" />
-      <div className="mgn-cover-in" style={{ "--mgn-orbit-gap": `${orbitGap}px` } as React.CSSProperties}>
-        <span className="mgn-sig mgn-hand" onPointerEnter={() => morphStar(true)} onPointerLeave={() => morphStar(false)}>
+      <div className="mgn-cover-in">
+        <div className="mgn-cover-identity">
+          {portrait && <div className="mgn-avatar mgn-cover-avatar"><img src={photo(portrait, 320)} alt={name} /><PenMark kind="oval" seed={80} padX={9} padY={9} /></div>}
+        <span className="mgn-sig mgn-hand">
             <svg className="mgn-sig-arrow mgn-ink" viewBox="0 0 150 110" aria-hidden="true">
               <path className="mgn-draw" pathLength={1} d="M146 14C128 34 104 30 101 17C98 4 120 2 117 24C114 48 70 74 24 96" />
               <path className="mgn-draw" pathLength={1} d="M30 80L22 97L41 99" />
             </svg>
             <span className="mgn-write">{name}</span>
           </span>
+        </div>
+        <HeroStickerTrail>
         <h1 ref={titleRef} data-roll-ready={rollReady} onPointerMove={moveLetters} onPointerLeave={resetLetters} className="mgn-display mgn-title" aria-label={title + " — " + name + ", " + role}>
-          <span className="mgn-orbit" aria-hidden="true">
-            <svg className="mgn-orbit-back mgn-ink" viewBox={[-titleSize.width / 2, -titleSize.height / 2, titleSize.width, titleSize.height].join(" ")}>
-              <g transform="rotate(-8)">
-                <path className="mgn-draw" pathLength={1} d={`M${-rx} 0A${rx} ${ry} 0 0 1 ${rx} 0`} />
-              </g>
-            </svg>
-            <svg className="mgn-orbit-front mgn-ink" viewBox={[-titleSize.width / 2, -titleSize.height / 2, titleSize.width, titleSize.height].join(" ")}>
-              <g transform="rotate(-8)">
-                <path className="mgn-draw" pathLength={1} d={`M${rx} 0A${rx} ${ry} 0 0 1 ${-rx} 0`} />
-              </g>
-              <g className="mgn-star-g" data-rx={rx} data-ry={ry} transform={"translate(" + start.x.toFixed(2) + " " + start.y.toFixed(2) + ")"}>
-                <g className="mgn-star-s">
-                  <path ref={starRef} d={sparkle} style={{ fill: "var(--mgn-pen)", stroke: "none" }} />
-                </g>
-              </g>
-            </svg>
-          </span>
           {chars.map((c, i) => (
             <span key={i} className="mgn-l" aria-hidden="true" style={{ "--mgn-i": i } as React.CSSProperties}>
               <span className="mgn-lc">
@@ -1671,6 +1597,7 @@ function Cover({ info, title, name, role, year, location, docLabel, inkTrail }: 
             </span>
           ))}
         </h1>
+        </HeroStickerTrail>
         <div className="mgn-pill-wrap">
           <span className="mgn-pill">
             {role}
@@ -2318,7 +2245,6 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
         play(intro, cover.querySelectorAll(".mgn-draw"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut", stagger: 0.12 }, 1)
         play(intro, cover.querySelectorAll(".mgn-pill"), { scale: 0.5, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.9, ease: "back.out(2.2)" }, 0.75)
         play(intro, cover.querySelectorAll(".mgn-cover-meta > *"), { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 1.1)
-        play(intro, cover.querySelectorAll(".mgn-star-s"), { scale: 0, rotate: -180, svgOrigin: "0 0" }, { scale: 1, rotate: 0, svgOrigin: "0 0", duration: 0.8, ease: "back.out(3)" }, 1.5)
 
         // …and drift apart as you leave
         const letters = cover.querySelectorAll(".mgn-l")
@@ -2331,33 +2257,6 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
         out.to(cover.querySelectorAll(".mgn-pill-wrap, .mgn-sig"), { y: -110, autoAlpha: 0, ease: "none" }, 0)
         out.to(cover.querySelectorAll(".mgn-cover-in"), { scale: 0.9, ease: "none" }, 0)
 
-        // the star orbits the whole title, dimming when it passes behind
-        const star = cover.querySelector(".mgn-star-g") as SVGGElement | null
-        if (star) {
-          const ph = { t: 0.15 }
-          let orbitRx = Number(star.dataset.rx)
-          let orbitRy = Number(star.dataset.ry)
-          let sampleOrbit = makeOrbitSampler(orbitRx, orbitRy, ORBIT_TILT)
-          const spin = gsap.to(ph, {
-            t: 1.15,
-            duration: 12,
-            ease: "none",
-            repeat: -1,
-            onUpdate: () => {
-              const nextRx = Number(star.dataset.rx)
-              const nextRy = Number(star.dataset.ry)
-              if (nextRx !== orbitRx || nextRy !== orbitRy) {
-                orbitRx = nextRx
-                orbitRy = nextRy
-                sampleOrbit = makeOrbitSampler(orbitRx, orbitRy, ORBIT_TILT)
-              }
-              const o = sampleOrbit(ph.t)
-              star.setAttribute("transform", "translate(" + o.x.toFixed(2) + " " + o.y.toFixed(2) + ")")
-              star.style.opacity = o.opacity.toFixed(3)
-            },
-          })
-          ScrollTrigger.create({ trigger: cover, start: "top bottom", end: "bottom top", onToggle: (s) => (s.isActive ? spin.play() : spin.pause()) })
-        }
       }
 
       // headings: characters rise, the underline goes from nervous to sure
@@ -2508,7 +2407,7 @@ export default function MarginaliaPortfolioTemplate(props: MarginaliaPortfolioTe
       {sheets.map(({ info, kind, i }) => {
         switch (kind) {
           case "cover":
-            return <Cover key={info.id} info={info} title={title} name={name} role={role} year={year} location={location} docLabel={docLabel} inkTrail={inkTrail} />
+            return <Cover key={info.id} info={info} title={title} name={name} portrait={portrait} role={role} year={year} location={location} docLabel={docLabel} inkTrail={inkTrail} />
           case "hello":
             return <Hello key={info.id} info={info} portrait={portrait} traits={traits} greeting={greeting} bio={bio} name={name} />
           case "education":

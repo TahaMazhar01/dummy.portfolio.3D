@@ -1,6 +1,6 @@
 # Sarah Guhaina — Portfolio
 
-A responsive React portfolio with animated teal annotations, a smooth title orbit, lilac and plum backgrounds, and a generated reference-based portrait.
+A responsive React portfolio with animated teal annotations, an interactive rolling title, lilac and plum backgrounds, and a generated reference-based portrait.
 
 ## Run locally
 
@@ -38,4 +38,4 @@ Based on Marginalia Portfolio Template by Kedhareswer Naidu, distributed under t
 
 The UK education entries and language proficiency levels are sample content. A standalone QR code is available at public/portfolio-qr.svg.
 
-The home page combines rolling Portfolio title letters with the smooth orbit animation. Social profile links remain hidden until Sarah's actual profile URLs are supplied.
+The home page pairs rolling Portfolio title letters with hover/tap sticker trails and Sarah's circular sketch-framed portrait above the title. Social profile links remain hidden until Sarah's actual profile URLs are supplied.
